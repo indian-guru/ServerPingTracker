@@ -28,24 +28,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const serverData = insertServerSchema.parse(req.body);
       const server = await storage.createServer(serverData);
       
-      // Trigger immediate ping for new server
-      const settings = await storage.getSettings();
-      const result = await pingService.pingServer(server, settings.timeout);
+      // Return the server immediately, then ping in background
+      res.json(server);
       
-      const updatedServer = await storage.updateServer(server.id, {
-        status: result.success ? "online" : "offline",
-        responseTime: result.responseTime || null,
-        lastPing: new Date(),
-      });
+      // Trigger immediate ping for new server (non-blocking)
+      setTimeout(async () => {
+        try {
+          const settings = await storage.getSettings();
+          const result = await pingService.pingServer(server, settings.timeout);
+          
+          await storage.updateServer(server.id, {
+            status: result.success ? "online" : "offline",
+            responseTime: result.responseTime || null,
+            lastPing: new Date(),
+          });
 
-      await storage.createPingLog({
-        serverId: server.id,
-        status: result.success ? "success" : "failed",
-        responseTime: result.responseTime || null,
-        details: result.details,
-      });
-
-      res.json(updatedServer);
+          await storage.createPingLog({
+            serverId: server.id,
+            status: result.success ? "success" : "failed",
+            responseTime: result.responseTime || null,
+            details: result.details,
+          });
+        } catch (pingError) {
+          console.error(`Failed to ping new server ${server.hostname}:`, pingError);
+        }
+      }, 100);
     } catch (error) {
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid server data", errors: error.errors });

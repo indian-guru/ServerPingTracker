@@ -13,14 +13,28 @@ export class PingService {
   }> {
     const target = server.ip || server.hostname;
     
-    // Try HTTP/HTTPS connectivity first
-    const httpResult = await this.httpPing(target, timeoutSeconds);
-    if (httpResult.success) {
-      return httpResult;
-    }
+    // For local/private IP addresses, try TCP first as they may not have HTTP services
+    const isLocalIP = /^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|127\.|localhost)/i.test(target);
     
-    // If HTTP fails, try TCP connection test
-    return await this.tcpPing(target, timeoutSeconds);
+    if (isLocalIP) {
+      // Try TCP connection test first for local servers
+      const tcpResult = await this.tcpPing(target, Math.min(timeoutSeconds, 5));
+      if (tcpResult.success) {
+        return tcpResult;
+      }
+      
+      // If TCP fails, try HTTP as fallback
+      return await this.httpPing(target, Math.min(timeoutSeconds, 3));
+    } else {
+      // Try HTTP/HTTPS connectivity first for external servers
+      const httpResult = await this.httpPing(target, timeoutSeconds);
+      if (httpResult.success) {
+        return httpResult;
+      }
+      
+      // If HTTP fails, try TCP connection test
+      return await this.tcpPing(target, timeoutSeconds);
+    }
   }
 
   private async httpPing(target: string, timeoutSeconds: number): Promise<{
