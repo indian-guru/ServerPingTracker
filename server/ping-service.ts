@@ -1,4 +1,5 @@
 import * as cron from "node-cron";
+import { createConnection } from "net";
 import { storage } from "./storage";
 import type { Server } from "@shared/schema";
 
@@ -94,7 +95,6 @@ export class PingService {
     details: string;
   }> {
     return new Promise((resolve) => {
-      const { createConnection } = require('net');
       const startTime = Date.now();
       
       // Try common ports for connectivity test
