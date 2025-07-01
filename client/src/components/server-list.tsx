@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, RefreshCw, Trash2 } from "lucide-react";
+import { Plus, RefreshCw, Trash2, Upload } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,9 +9,10 @@ import type { Server } from "@shared/schema";
 
 interface ServerListProps {
   onAddServer: () => void;
+  onBulkImport: () => void;
 }
 
-export function ServerList({ onAddServer }: ServerListProps) {
+export function ServerList({ onAddServer, onBulkImport }: ServerListProps) {
   const { toast } = useToast();
   
   const { data: servers, isLoading } = useQuery<Server[]>({
@@ -85,7 +86,7 @@ export function ServerList({ onAddServer }: ServerListProps) {
       : "border-gray-200 hover:border-gray-300";
   };
 
-  const formatLastPing = (lastPing: string | null) => {
+  const formatLastPing = (lastPing: Date | string | null) => {
     if (!lastPing) return "Never";
     
     const date = new Date(lastPing);
@@ -104,10 +105,20 @@ export function ServerList({ onAddServer }: ServerListProps) {
         <CardHeader className="px-6 py-4 border-b border-gray-200">
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-semibold text-gray-900">Server Status</h2>
-            <Button onClick={onAddServer} className="bg-primary hover:bg-blue-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Server
-            </Button>
+            <div className="flex space-x-2">
+              <Button 
+                onClick={onBulkImport} 
+                variant="outline"
+                className="text-gray-600 hover:text-gray-800"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Bulk Import
+              </Button>
+              <Button onClick={onAddServer} className="bg-primary hover:bg-blue-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Server
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="p-6">
@@ -154,10 +165,16 @@ export function ServerList({ onAddServer }: ServerListProps) {
         {!servers || servers.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-500">No servers configured yet.</p>
-            <Button onClick={onAddServer} className="mt-4 bg-primary hover:bg-blue-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Your First Server
-            </Button>
+            <div className="flex justify-center space-x-3 mt-4">
+              <Button onClick={onAddServer} className="bg-primary hover:bg-blue-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Server
+              </Button>
+              <Button onClick={onBulkImport} variant="outline">
+                <Upload className="w-4 h-4 mr-2" />
+                Bulk Import
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="space-y-4">
