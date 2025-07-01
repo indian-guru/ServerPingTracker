@@ -49,7 +49,9 @@ export class MemStorage implements IStorage {
     const id = this.currentServerId++;
     const server: Server = {
       id,
-      ...insertServer,
+      hostname: insertServer.hostname,
+      ip: insertServer.ip,
+      displayName: insertServer.displayName || null,
       status: "unknown",
       responseTime: null,
       lastPing: null,
@@ -89,7 +91,10 @@ export class MemStorage implements IStorage {
     const id = this.currentPingLogId++;
     const log: PingLog = {
       id,
-      ...insertLog,
+      serverId: insertLog.serverId,
+      status: insertLog.status,
+      responseTime: insertLog.responseTime ?? null,
+      details: insertLog.details || null,
       timestamp: new Date(),
     };
     this.pingLogs.push(log);
