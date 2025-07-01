@@ -51,6 +51,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bulk import servers
+  app.post("/api/servers/bulk", async (req, res) => {
+    try {
+      const { servers: serverList } = req.body;
+      
+      if (!Array.isArray(serverList)) {
+        return res.status(400).json({ message: "Expected 'servers' to be an array" });
+      }
+
+      // Validate all servers before creating any
+      const validatedServers = serverList.map(server => insertServerSchema.parse(server));
+      
+      // Create all servers
+      const createdServers = await storage.createServers(validatedServers);
+      
+      // Ping all servers concurrently for faster bulk import
+      const settings = await storage.getSettings();
+      const pingPromises = createdServers.map(async (server) => {
+        const result = await pingService.pingServer(server, settings.timeout);
+        
+        const updatedServer = await storage.updateServer(server.id, {
+          status: result.success ? "online" : "offline",
+          responseTime: result.responseTime || null,
+          lastPing: new Date(),
+        });
+
+        await storage.createPingLog({
+          serverId: server.id,
+          status: result.success ? "success" : "failed",
+          responseTime: result.responseTime || null,
+          details: result.details,
+        });
+
+        return updatedServer;
+      });
+
+      const updatedServers = await Promise.all(pingPromises);
+      
+      res.json({ 
+        message: `Successfully imported ${updatedServers.length} servers`,
+        servers: updatedServers 
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid server data", errors: error.errors });
+      } else {
+        console.error('Bulk import error:', error);
+        res.status(500).json({ message: "Failed to import servers" });
+      }
+    }
+  });
+
   app.delete("/api/servers/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
