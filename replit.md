@@ -111,6 +111,9 @@ This is a full-stack web application for monitoring server uptime and performanc
   - Server list now persists across application restarts
   - Fixed ping service to use HTTP/HTTPS requests instead of system ping
   - All data (servers, logs, settings) automatically saved to disk
+  - Fixed server creation to be non-blocking (no immediate ping on add)
+  - Removed duplicate close buttons from modals
+  - Server creation now instant, scheduled ping service handles monitoring
 
 ## User Preferences
 
