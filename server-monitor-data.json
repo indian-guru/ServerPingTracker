@@ -1,56 +1,5 @@
 {
-  "servers": [
-    {
-      "id": 1,
-      "hostname": "Google.com",
-      "ip": "Google.com",
-      "displayName": null,
-      "status": "online",
-      "responseTime": 34,
-      "lastPing": "2025-07-01T06:49:00.041Z",
-      "createdAt": "2025-07-01T06:27:50.568Z"
-    },
-    {
-      "id": 2,
-      "hostname": "yahoo.com",
-      "ip": "yahoo.com",
-      "displayName": null,
-      "status": "online",
-      "responseTime": 395,
-      "lastPing": "2025-07-01T06:49:00.623Z",
-      "createdAt": "2025-07-01T06:28:01.672Z"
-    },
-    {
-      "id": 3,
-      "hostname": "someserver.com",
-      "ip": "someserver.com",
-      "displayName": null,
-      "status": "online",
-      "responseTime": 201,
-      "lastPing": "2025-07-01T06:49:00.865Z",
-      "createdAt": "2025-07-01T06:28:13.574Z"
-    },
-    {
-      "id": 11,
-      "hostname": "imbatman",
-      "ip": "imbatman",
-      "displayName": null,
-      "status": "unknown",
-      "responseTime": null,
-      "lastPing": null,
-      "createdAt": "2025-07-01T06:46:22.700Z"
-    },
-    {
-      "id": 12,
-      "hostname": "eragon",
-      "ip": "eragon",
-      "displayName": null,
-      "status": "unknown",
-      "responseTime": null,
-      "lastPing": null,
-      "createdAt": "2025-07-01T06:46:29.584Z"
-    }
-  ],
+  "servers": [],
   "pingLogs": [
     {
       "id": 1,
@@ -755,6 +704,110 @@
       "responseTime": 201,
       "details": "HTTP 403 Forbidden",
       "timestamp": "2025-07-01T06:49:00.866Z"
+    },
+    {
+      "id": 89,
+      "serverId": 1,
+      "status": "success",
+      "responseTime": 27,
+      "details": "HTTPS 200 OK",
+      "timestamp": "2025-07-01T06:50:00.034Z"
+    },
+    {
+      "id": 90,
+      "serverId": 2,
+      "status": "success",
+      "responseTime": 672,
+      "details": "HTTPS 200 OK",
+      "timestamp": "2025-07-01T06:50:00.718Z"
+    },
+    {
+      "id": 91,
+      "serverId": 3,
+      "status": "success",
+      "responseTime": 78,
+      "details": "HTTP 403 Forbidden",
+      "timestamp": "2025-07-01T06:50:00.839Z"
+    },
+    {
+      "id": 92,
+      "serverId": 1,
+      "status": "success",
+      "responseTime": 27,
+      "details": "HTTPS 200 OK",
+      "timestamp": "2025-07-01T06:51:00.036Z"
+    },
+    {
+      "id": 93,
+      "serverId": 2,
+      "status": "success",
+      "responseTime": 543,
+      "details": "HTTPS 200 OK",
+      "timestamp": "2025-07-01T06:51:00.588Z"
+    },
+    {
+      "id": 94,
+      "serverId": 3,
+      "status": "success",
+      "responseTime": 77,
+      "details": "HTTP 403 Forbidden",
+      "timestamp": "2025-07-01T06:51:00.708Z"
+    },
+    {
+      "id": 95,
+      "serverId": 1,
+      "status": "success",
+      "responseTime": 30,
+      "details": "HTTPS 200 OK",
+      "timestamp": "2025-07-01T06:51:27.175Z"
+    },
+    {
+      "id": 96,
+      "serverId": 2,
+      "status": "success",
+      "responseTime": 1769,
+      "details": "HTTPS 200 OK",
+      "timestamp": "2025-07-01T06:51:28.946Z"
+    },
+    {
+      "id": 97,
+      "serverId": 3,
+      "status": "success",
+      "responseTime": 82,
+      "details": "HTTP 403 Forbidden",
+      "timestamp": "2025-07-01T06:51:29.123Z"
+    },
+    {
+      "id": 98,
+      "serverId": 1,
+      "status": "success",
+      "responseTime": 27,
+      "details": "HTTPS 200 OK",
+      "timestamp": "2025-07-01T06:52:00.036Z"
+    },
+    {
+      "id": 99,
+      "serverId": 2,
+      "status": "success",
+      "responseTime": 3269,
+      "details": "HTTPS 200 OK",
+      "timestamp": "2025-07-01T06:52:03.314Z"
+    },
+    {
+      "id": 100,
+      "serverId": 3,
+      "status": "success",
+      "responseTime": 194,
+      "details": "HTTP 403 Forbidden",
+      "timestamp": "2025-07-01T06:52:03.550Z"
+    },
+    {
+      "id": 101,
+      "serverId": 1,
+      "status": "success",
+      "responseTime": 27,
+      "details": "HTTPS 200 OK",
+      "timestamp": "2025-07-01T06:53:00.034Z"
     }
   ],
   "settings": {
