@@ -97,12 +97,20 @@ This is a full-stack web application for monitoring server uptime and performanc
 ## Changelog
 - July 01, 2025: Initial setup - Complete server monitoring application built and tested
   - Database schema designed for servers, ping logs, and settings
-  - Automated ping service with configurable intervals
+  - Automated ping service with configurable intervals (fixed HTTP-based connectivity testing)
   - Full REST API with comprehensive endpoints
   - Modern React dashboard with real-time monitoring
   - Settings panel for customization
   - Detailed logs table with export functionality
   - Successfully tested with live server monitoring
+
+- July 01, 2025: Added persistence and bulk import features
+  - Implemented file-based persistence (server-monitor-data.json)
+  - Added bulk import API endpoint (/api/servers/bulk)
+  - Created bulk import modal with CSV and JSON format support
+  - Server list now persists across application restarts
+  - Fixed ping service to use HTTP/HTTPS requests instead of system ping
+  - All data (servers, logs, settings) automatically saved to disk
 
 ## User Preferences
 

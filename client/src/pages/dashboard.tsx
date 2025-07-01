@@ -7,15 +7,17 @@ import { ServerList } from "@/components/server-list";
 import { SettingsPanel } from "@/components/settings-panel";
 import { LogsTable } from "@/components/logs-table";
 import { AddServerModal } from "@/components/add-server-modal";
+import { BulkImportModal } from "@/components/bulk-import-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isBulkImportModalOpen, setIsBulkImportModalOpen] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const { toast } = useToast();
 
-  const { data: settings } = useQuery({
+  const { data: settings } = useQuery<{ autoRefresh?: boolean }>({
     queryKey: ["/api/settings"],
   });
 
@@ -93,7 +95,10 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Server List */}
           <div className="lg:col-span-2">
-            <ServerList onAddServer={() => setIsAddModalOpen(true)} />
+            <ServerList 
+              onAddServer={() => setIsAddModalOpen(true)}
+              onBulkImport={() => setIsBulkImportModalOpen(true)}
+            />
           </div>
 
           {/* Settings Panel */}
@@ -108,6 +113,12 @@ export default function Dashboard() {
       <AddServerModal 
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
+      />
+
+      {/* Bulk Import Modal */}
+      <BulkImportModal 
+        isOpen={isBulkImportModalOpen}
+        onClose={() => setIsBulkImportModalOpen(false)}
       />
     </div>
   );
