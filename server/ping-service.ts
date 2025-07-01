@@ -197,8 +197,10 @@ export class PingService {
       }
     });
 
-    // Initial ping
-    await this.pingAllServers();
+    // Initial ping (don't await to prevent startup blocking)
+    this.pingAllServers().catch(error => {
+      console.error("Error during initial ping:", error);
+    });
   }
 
   async stopScheduledPing(): Promise<void> {

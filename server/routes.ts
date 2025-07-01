@@ -6,8 +6,12 @@ import { insertServerSchema, insertSettingsSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Start ping service (temporarily disabled to fix startup issue)
-  // await pingService.startScheduledPing();
+  // Start ping service (non-blocking to prevent startup issues)
+  setTimeout(() => {
+    pingService.startScheduledPing().catch(error => {
+      console.error("Failed to start ping service:", error);
+    });
+  }, 1000);
 
   // Server routes
   app.get("/api/servers", async (req, res) => {
