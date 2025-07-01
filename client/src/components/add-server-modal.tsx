@@ -24,12 +24,9 @@ export function AddServerModal({ isOpen, onClose }: AddServerModalProps) {
   const { toast } = useToast();
 
   const addServerMutation = useMutation({
-    mutationFn: (data: { hostname: string; ip: string; displayName?: string }) => {
-      console.log("Making API request with data:", data);
-      return apiRequest("POST", "/api/servers", data);
-    },
-    onSuccess: (result) => {
-      console.log("API request successful:", result);
+    mutationFn: (data: { hostname: string; ip: string; displayName?: string }) =>
+      apiRequest("POST", "/api/servers", data),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/servers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       toast({
@@ -39,7 +36,6 @@ export function AddServerModal({ isOpen, onClose }: AddServerModalProps) {
       handleClose();
     },
     onError: (error: any) => {
-      console.error("API request failed:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to add server",
@@ -84,12 +80,7 @@ export function AddServerModal({ isOpen, onClose }: AddServerModalProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log("Form submission started", { serverType, address, displayName });
-    
-    if (!validateForm()) {
-      console.log("Form validation failed", errors);
-      return;
-    }
+    if (!validateForm()) return;
 
     try {
       const serverData = {
@@ -98,12 +89,9 @@ export function AddServerModal({ isOpen, onClose }: AddServerModalProps) {
         displayName: displayName.trim() || undefined,
       };
 
-      console.log("Server data prepared:", serverData);
       insertServerSchema.parse(serverData);
-      console.log("Schema validation passed, starting mutation");
       addServerMutation.mutate(serverData);
     } catch (error) {
-      console.error("Form submission error:", error);
       if (error instanceof z.ZodError) {
         const newErrors: Record<string, string> = {};
         error.errors.forEach(err => {
@@ -120,12 +108,7 @@ export function AddServerModal({ isOpen, onClose }: AddServerModalProps) {
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex justify-between items-center">
-            Add Server
-            <Button variant="ghost" size="sm" onClick={handleClose}>
-              <X className="w-4 h-4" />
-            </Button>
-          </DialogTitle>
+          <DialogTitle>Add Server</DialogTitle>
           <DialogDescription>
             Add a new server to monitor by providing its hostname or IP address.
           </DialogDescription>
