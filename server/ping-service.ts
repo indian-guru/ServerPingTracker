@@ -111,8 +111,8 @@ export class PingService {
     return new Promise((resolve) => {
       const startTime = Date.now();
       
-      // Try common ports for connectivity test
-      const ports = [80, 443, 22, 21, 25, 53];
+      // Try common ports for connectivity test - prioritize local services
+      const ports = [22, 80, 443, 3389, 5900, 23, 21, 25, 53, 135, 445, 8080, 8443];
       let successfulConnections = 0;
       let completedAttempts = 0;
       
@@ -120,7 +120,7 @@ export class PingService {
         const socket = createConnection({
           host: target,
           port: port,
-          timeout: timeoutSeconds * 1000
+          timeout: Math.min(timeoutSeconds * 1000, 2000) // Max 2 seconds per port for local servers
         });
 
         socket.on('connect', () => {
