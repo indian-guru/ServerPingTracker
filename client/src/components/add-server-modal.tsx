@@ -24,9 +24,12 @@ export function AddServerModal({ isOpen, onClose }: AddServerModalProps) {
   const { toast } = useToast();
 
   const addServerMutation = useMutation({
-    mutationFn: (data: { hostname: string; ip: string; displayName?: string }) =>
-      apiRequest("POST", "/api/servers", data),
-    onSuccess: () => {
+    mutationFn: (data: { hostname: string; ip: string; displayName?: string }) => {
+      console.log("Making API request with data:", data);
+      return apiRequest("POST", "/api/servers", data);
+    },
+    onSuccess: (result) => {
+      console.log("API request successful:", result);
       queryClient.invalidateQueries({ queryKey: ["/api/servers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       toast({
@@ -36,6 +39,7 @@ export function AddServerModal({ isOpen, onClose }: AddServerModalProps) {
       handleClose();
     },
     onError: (error: any) => {
+      console.error("API request failed:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to add server",
@@ -58,15 +62,17 @@ export function AddServerModal({ isOpen, onClose }: AddServerModalProps) {
     if (!address.trim()) {
       newErrors.address = "Address is required";
     } else if (serverType === "ip") {
-      // Basic IP validation
+      // Basic IP validation - allow localhost and private ranges
+      const trimmedAddress = address.trim();
       const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-      if (!ipRegex.test(address.trim())) {
+      if (!ipRegex.test(trimmedAddress) && trimmedAddress !== "localhost" && trimmedAddress !== "127.0.0.1") {
         newErrors.address = "Please enter a valid IP address";
       }
     } else {
-      // Basic hostname validation
+      // Basic hostname validation - allow localhost
+      const trimmedAddress = address.trim();
       const hostnameRegex = /^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$/;
-      if (!hostnameRegex.test(address.trim())) {
+      if (!hostnameRegex.test(trimmedAddress) && trimmedAddress !== "localhost") {
         newErrors.address = "Please enter a valid hostname";
       }
     }
@@ -78,7 +84,12 @@ export function AddServerModal({ isOpen, onClose }: AddServerModalProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    console.log("Form submission started", { serverType, address, displayName });
+    
+    if (!validateForm()) {
+      console.log("Form validation failed", errors);
+      return;
+    }
 
     try {
       const serverData = {
@@ -87,9 +98,12 @@ export function AddServerModal({ isOpen, onClose }: AddServerModalProps) {
         displayName: displayName.trim() || undefined,
       };
 
+      console.log("Server data prepared:", serverData);
       insertServerSchema.parse(serverData);
+      console.log("Schema validation passed, starting mutation");
       addServerMutation.mutate(serverData);
     } catch (error) {
+      console.error("Form submission error:", error);
       if (error instanceof z.ZodError) {
         const newErrors: Record<string, string> = {};
         error.errors.forEach(err => {
