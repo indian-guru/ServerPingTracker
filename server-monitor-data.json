@@ -29,16 +29,6 @@
       "responseTime": 205,
       "lastPing": "2025-07-01T06:34:04.441Z",
       "createdAt": "2025-07-01T06:28:13.574Z"
-    },
-    {
-      "id": 4,
-      "hostname": "eragon",
-      "ip": "eragon",
-      "displayName": null,
-      "status": "unknown",
-      "responseTime": null,
-      "lastPing": null,
-      "createdAt": "2025-07-01T06:28:28.358Z"
     }
   ],
   "pingLogs": [
