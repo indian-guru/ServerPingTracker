@@ -51,35 +51,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate all servers before creating any
       const validatedServers = serverList.map(server => insertServerSchema.parse(server));
       
-      // Create all servers
+      // Create all servers - let scheduled ping handle the monitoring
       const createdServers = await storage.createServers(validatedServers);
       
-      // Ping all servers concurrently for faster bulk import
-      const settings = await storage.getSettings();
-      const pingPromises = createdServers.map(async (server) => {
-        const result = await pingService.pingServer(server, settings.timeout);
-        
-        const updatedServer = await storage.updateServer(server.id, {
-          status: result.success ? "online" : "offline",
-          responseTime: result.responseTime || null,
-          lastPing: new Date(),
-        });
-
-        await storage.createPingLog({
-          serverId: server.id,
-          status: result.success ? "success" : "failed",
-          responseTime: result.responseTime || null,
-          details: result.details,
-        });
-
-        return updatedServer;
-      });
-
-      const updatedServers = await Promise.all(pingPromises);
-      
       res.json({ 
-        message: `Successfully imported ${updatedServers.length} servers`,
-        servers: updatedServers 
+        message: `Successfully imported ${createdServers.length} servers`,
+        servers: createdServers 
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
