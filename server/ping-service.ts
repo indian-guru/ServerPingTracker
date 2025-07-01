@@ -1,10 +1,6 @@
-import { exec } from "child_process";
-import { promisify } from "util";
 import * as cron from "node-cron";
 import { storage } from "./storage";
 import type { Server } from "@shared/schema";
-
-const execAsync = promisify(exec);
 
 export class PingService {
   private cronJob: cron.ScheduledTask | null = null;
@@ -16,48 +12,150 @@ export class PingService {
   }> {
     const target = server.ip || server.hostname;
     
-    try {
-      // Use ping command with timeout
-      const isWindows = process.platform === "win32";
-      const pingCommand = isWindows 
-        ? `ping -n 1 -w ${timeoutSeconds * 1000} ${target}`
-        : `ping -c 1 -W ${timeoutSeconds} ${target}`;
-
-      const startTime = Date.now();
-      const { stdout, stderr } = await execAsync(pingCommand, {
-        timeout: timeoutSeconds * 1000 + 1000, // Add 1 second buffer
-      });
-      const endTime = Date.now();
-
-      if (stderr) {
-        return {
-          success: false,
-          details: `Ping failed: ${stderr.trim()}`,
-        };
-      }
-
-      // Extract response time from ping output
-      let responseTime = endTime - startTime;
-      
-      // Try to extract more accurate timing from ping output
-      const timeMatch = stdout.match(/time[<=](\d+(?:\.\d+)?)\s*ms/i);
-      if (timeMatch) {
-        responseTime = Math.round(parseFloat(timeMatch[1]));
-      }
-
-      return {
-        success: true,
-        responseTime,
-        details: "Ping successful",
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        details: error.code === 'ETIMEDOUT' 
-          ? "Connection timeout" 
-          : `Ping failed: ${error.message}`,
-      };
+    // Try HTTP/HTTPS connectivity first
+    const httpResult = await this.httpPing(target, timeoutSeconds);
+    if (httpResult.success) {
+      return httpResult;
     }
+    
+    // If HTTP fails, try TCP connection test
+    return await this.tcpPing(target, timeoutSeconds);
+  }
+
+  private async httpPing(target: string, timeoutSeconds: number): Promise<{
+    success: boolean;
+    responseTime?: number;
+    details: string;
+  }> {
+    // Determine if target is an IP address or hostname
+    const isIP = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(target);
+    
+    // For hostnames, try HTTPS first then HTTP; for IPs, try HTTP first
+    const protocols = isIP ? ['http', 'https'] : ['https', 'http'];
+    
+    for (const protocol of protocols) {
+      try {
+        const url = `${protocol}://${target}`;
+        const startTime = Date.now();
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutSeconds * 1000);
+        
+        const response = await fetch(url, {
+          method: 'HEAD',
+          signal: controller.signal,
+          headers: {
+            'User-Agent': 'Server-Monitor/1.0'
+          }
+        });
+        
+        clearTimeout(timeoutId);
+        const endTime = Date.now();
+        const responseTime = endTime - startTime;
+
+        // Consider any HTTP status code 200-499 as successful (server is responding)
+        if (response.status >= 200 && response.status < 500) {
+          return {
+            success: true,
+            responseTime,
+            details: `${protocol.toUpperCase()} ${response.status} ${response.statusText}`,
+          };
+        } else {
+          return {
+            success: false,
+            details: `${protocol.toUpperCase()} ${response.status} ${response.statusText}`,
+          };
+        }
+        
+      } catch (error: any) {
+        console.log(`HTTP ping failed for ${protocol}://${target}:`, error.message);
+        
+        if (error.name === 'AbortError') {
+          return {
+            success: false,
+            details: "Connection timeout",
+          };
+        }
+        
+        // Continue to next protocol if this one fails
+        continue;
+      }
+    }
+    
+    return {
+      success: false,
+      details: "No HTTP/HTTPS response",
+    };
+  }
+
+  private async tcpPing(target: string, timeoutSeconds: number): Promise<{
+    success: boolean;
+    responseTime?: number;
+    details: string;
+  }> {
+    return new Promise((resolve) => {
+      const { createConnection } = require('net');
+      const startTime = Date.now();
+      
+      // Try common ports for connectivity test
+      const ports = [80, 443, 22, 21, 25, 53];
+      let successfulConnections = 0;
+      let completedAttempts = 0;
+      
+      const tryPort = (port: number) => {
+        const socket = createConnection({
+          host: target,
+          port: port,
+          timeout: timeoutSeconds * 1000
+        });
+
+        socket.on('connect', () => {
+          const endTime = Date.now();
+          const responseTime = endTime - startTime;
+          socket.destroy();
+          resolve({
+            success: true,
+            responseTime,
+            details: `TCP connection successful on port ${port}`,
+          });
+        });
+
+        socket.on('error', () => {
+          socket.destroy();
+          completedAttempts++;
+          if (completedAttempts === ports.length && successfulConnections === 0) {
+            resolve({
+              success: false,
+              details: `No response on common ports (${ports.join(', ')})`,
+            });
+          }
+        });
+
+        socket.on('timeout', () => {
+          socket.destroy();
+          completedAttempts++;
+          if (completedAttempts === ports.length && successfulConnections === 0) {
+            resolve({
+              success: false,
+              details: "Connection timeout on all ports",
+            });
+          }
+        });
+      };
+
+      // Try the first port, if it fails quickly try others
+      tryPort(ports[0]);
+      
+      // Set a fallback timeout
+      setTimeout(() => {
+        if (completedAttempts === 0) {
+          resolve({
+            success: false,
+            details: "Connection timeout",
+          });
+        }
+      }, timeoutSeconds * 1000);
+    });
   }
 
   async pingAllServers(): Promise<void> {
